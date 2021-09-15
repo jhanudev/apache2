@@ -1,0 +1,58 @@
+---
+- name: This sets up an httpd webserver
+  hosts: all
+  become: true
+  tasks:
+    - name: Print the gateway for each host when defined
+      ansible.builtin.debug:
+       msg: 'System machine name {{ ansible_facts[''distribution''] }}'
+    - name: update apt repo and cache on all debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+    - name: Install apache packages
+      apt:
+        name: apache2
+        state: present
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      service:
+        name: apache2
+        state: started
+    - name: update apt repo and cache on all Amazon Linux boxes
+      yum: update_cache=yes
+      when: 'ansible_facts[''distribution''] == "Amazon"'
+    - name: Install apache packages
+      yum:
+        name: httpd
+        state: present
+      when: 'ansible_facts[''distribution''] == "Amazon"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "Amazon"'
+      service:
+        name: httpd
+        state: started
+    - name: update apt repo and cache on all Debian boxes
+      apt: update_cache=yes force_apt_get=yes
+      when: 'ansible_facts[''distribution''] == "Debian"'
+    - name: Install apache packages
+      apt:
+        name: apache2
+        state: present
+      when: 'ansible_facts[''distribution''] == "Debian"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "Debian"'
+      service:
+        name: apache2
+        state: started
+    - name: Install apache packages
+      zypper:
+        name: apache2
+        state: present
+      when: 'ansible_facts[''distribution''] == "SLES"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "SLES"'
+      service:
+        name: apache2
+        state: started
+

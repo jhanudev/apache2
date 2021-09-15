@@ -1,0 +1,111 @@
+---
+- name: This sets up an httpd webserver
+  hosts: all
+  become: true
+  tasks:
+    - name: Print the gateway for each host when defined
+      ansible.builtin.debug:
+       msg: 'System machine name {{ ansible_facts[''distribution''] }}'
+
+    - name: update apt repo and cache on all debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+
+    - name: Installing Apache dependies
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      apt:
+        name: 
+         - build-essential 
+         - libssl-dev 
+         - libexpat-dev 
+         - libpcre2-dev 
+         - libapr1-dev
+         - libaprutil1-dev 
+         - libpcre3 
+         - libpcre3-dev
+        state: present
+
+    - name: download apache2 server packages
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      get_url:
+        url: https://dlcdn.apache.org/httpd/httpd-2.4.48.tar.gz
+        dest: /home/ubuntu
+        owner: ubuntu
+        group: ubuntu
+
+    - name: extract apache2 packagesi
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      unarchive:
+        src: /home/ubuntu/httpd-2.4.48.tar.gz
+        dest: /home/ubuntu
+        remote_src: yes
+
+    - name: starting Apache configoring file
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      shell: "./configure --enable-so"
+      args:
+        chdir: "/home/ubuntu/httpd-2.4.48"
+      become: true
+      become_user: root
+    - name: starting Apache make command
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      shell: "make"
+      args:
+        chdir: "/home/ubuntu/httpd-2.4.48"
+      become: true
+      become_user: root
+
+    - name: starting Apache installation using make install
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      shell: "make install"
+      args:
+        chdir: "/home/ubuntu/httpd-2.4.48"
+      become: true
+      become_user: root
+
+    - name: starting Apache Server After Installation
+      when: 'ansible_facts[''distribution''] == "Ubuntu"'
+      shell: "./apachectl start"
+      args:
+        chdir: "/usr/local/apache2/bin"
+      become: true
+      become_user: root
+
+
+    - name: update apt repo and cache on all Amazon Linux boxes
+      yum: update_cache=yes
+      when: 'ansible_facts[''distribution''] == "Amazon"'
+    - name: Install apache packages
+      yum:
+        name: httpd
+        state: present
+      when: 'ansible_facts[''distribution''] == "Amazon"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "Amazon"'
+      service:
+        name: httpd
+        state: started
+    - name: update apt repo and cache on all Debian boxes
+      apt: update_cache=yes force_apt_get=yes
+      when: 'ansible_facts[''distribution''] == "Debian"'
+    - name: Install apache packages
+      apt:
+        name: apache2
+        state: present
+      when: 'ansible_facts[''distribution''] == "Debian"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "Debian"'
+      service:
+        name: apache2
+        state: started
+    - name: Install apache packages
+      zypper:
+        name: apache2
+        state: present
+      when: 'ansible_facts[''distribution''] == "SLES"'
+    - name: ensure httpd is running
+      when: 'ansible_facts[''distribution''] == "SLES"'
+      service:
+        name: apache2
+        state: started
+
